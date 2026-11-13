@@ -7,9 +7,18 @@ from app.store import store
 
 MODULE = "backfill"
 REQUIRED_FIELDS = ["作业编号", "目标表名", "回填起始"]
-STATUS_ORDER = ["草稿", "待执行", "运行中", "已完成", "已失败"]
-ACTION_RULES = {"提交执行": "待执行", "启动回填": "运行中", "终止回填": "已失败", "归档结果": "已完成"}
-NEGATIVE_ACTIONS = []
+STATUS_ORDER = ["草稿", "待执行", "运行中", "待同步", "已完成", "已失败"]
+ACTION_RULES = {
+    "提交执行": "待执行",
+    "启动回填": "运行中",
+    "提交同步": "待同步",
+    "完成同步": "已完成",
+    "终止回填": "已失败",
+    "归档结果": "已完成",
+}
+NEGATIVE_ACTIONS = ["终止回填"]
+# 目标表仍在被写入的状态：这些状态的回填作业会阻止快照恢复。
+WRITING_STATUSES = ["待执行", "运行中", "待同步"]
 
 
 class BackfillService:
@@ -56,6 +65,6 @@ class BackfillService:
         if target not in STATUS_ORDER:
             return None, f"目标状态「{target}」不在允许的状态序列里"
         entry["status"] = target
-        entry["pending"] = target != STATUS_ORDER[-1]
+        entry["pending"] = target not in {"已完成", "已失败"}
         entry["abnormal"] = action in NEGATIVE_ACTIONS
         return entry, f"回填作业已{action}"

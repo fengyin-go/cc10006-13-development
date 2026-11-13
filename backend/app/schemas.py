@@ -19,6 +19,11 @@ class ActionResult(BaseModel):
     ok: bool
     message: str
     entry: dict[str, Any] | None = None
+    missing_dependencies: list[str] = Field(default_factory=list)
+    blockers: list[str] = Field(default_factory=list)
+    receipt: dict[str, Any] | None = None
+    duplicate: bool = False
+    applied: bool = False
 
 
 class EntryPayload(BaseModel):

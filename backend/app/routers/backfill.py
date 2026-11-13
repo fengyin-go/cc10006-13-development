@@ -13,13 +13,13 @@ router = APIRouter(prefix="/api/backfill", tags=["历史回填"])
 service = BackfillService()
 
 LIST_FIELDS = ["作业编号", "目标表名", "回填起始", "回填截止", "分区范围", "并行度", "失败续跑", "完成校验"]
-STATUSES = ["草稿", "待执行", "运行中", "已完成", "已失败"]
+STATUSES = ["草稿", "待执行", "运行中", "待同步", "已完成", "已失败"]
 
 
 @router.get("", response_model=PageResult[dict])
 def list_entries(
     keyword: str | None = Query(default=None, description="按作业编号检索"),
-    status: str | None = Query(default=None, description="草稿、待执行、运行中、已完成、已失败"),
+    status: str | None = Query(default=None, description="草稿、待执行、运行中、待同步、已完成、已失败"),
     page: int = 1,
     size: int = 20,
 ) -> PageResult[dict]:

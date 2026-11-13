@@ -68,6 +68,39 @@ npm run dev
 | 资源计量 | `resource` | 计量记录 | 记录编号、计算引擎、作业名称 |
 | 操作审计 | `audit` | 审计日志 | 日志编号、操作类型、操作对象 |
 
+## 版本快照恢复
+
+快照记录除了登记与生效，还提供依赖链校验与恢复能力，规则都在
+`backend/app/services/snapshot.py`：
+
+- 状态只能单向流转：`草稿 → 待创建 → 已生效 → 已过期`，回退与跳级都会被拦下；
+  重复执行同一动作幂等。
+- `恢复校验` 也只能 `待校验 → 校验通过`。依赖快照链上任一缺失或未生效时，
+  校验只返回缺失清单，不会推进状态。
+- `生效快照` 要求依赖链全部已生效且恢复校验通过；否则返回
+  `missing_dependencies` 并阻止生效。
+- `恢复快照` 在生效基础上，还会检查目标表的聚合视图与回填作业：
+  已启用/待校验的聚合视图、待执行/运行中/待同步的回填作业都会阻止恢复，
+  阻止原因放在 `blockers`。
+- 恢复成功会写一条目标表版本变更与审计记录，并生成恢复回执；并发恢复只成功一次，
+  重复请求返回同一张回执（`duplicate: true`，目标表不再变更）。
+- 已过期的快照保留记录、回执与审计，但不能再参与生效或恢复。
+
+示例数据里 `SNAP-0001 → SNAP-0002 → SNAP-0003` 是一条三级链：
+`SNAP-0002` 待创建、`SNAP-0003` 已生效，直接生效 `SNAP-0001` 会列出缺失的 `SNAP-0002`；
+`SNAP-0002` 校验并生效后，`SNAP-0001` 才能按链推进。`dws_order_agg` 上有一条
+`BACK-0004` 待同步回填作业，完成同步前恢复会被阻止。
+
+相关接口：
+
+- `POST /api/snapshot/{id}/actions`：动作包含 `提交创建`、`校验恢复`、`生效快照`、`恢复快照`、`标记过期`
+- `POST /api/snapshot/{id}/verify`：等价于 `校验恢复`
+- `POST /api/snapshot/{id}/restore`：等价于 `恢复快照`
+- `GET /api/snapshot/receipts`、`GET /api/snapshot/receipts/{id}`：恢复回执
+- `GET /api/snapshot/targets/{表名}`：目标表当前快照版本
+
+测试：`cd backend && .venv/bin/python -m pytest tests`。
+
 ## 约定
 
 - 每个模块的前端页面在 `frontend/src/views/<模块>/index.vue`，后端接口在

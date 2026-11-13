@@ -33,3 +33,10 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .link { border: none; background: none; color: var(--brand); cursor: pointer; padding: 0; }
 .page-foot { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .error-text { color: #b42318; }
+.notice-text { color: #166534; font-size: 12px; margin: 6px 0; }
+.muted-text { color: var(--muted); font-size: 12px; }
+.panel { margin-top: 16px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.panel-head h3 { margin: 0; font-size: 14px; }
+.filter-item select { min-width: 120px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+.link:disabled { color: #94a3b8; cursor: not-allowed; }
